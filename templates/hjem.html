@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        .row {
+            margin-left:-5px;
+            margin-right:-5px;
+        }
+            
+        .column {
+            float: left;
+            width: 50%;
+            padding: 5px;
+        }
+    </style>
+
+    <h1>{% block title %} Hjem {% endblock %}</h1>
+    
+    <div class="row">
+        <div class="column">
+            <a href=><h2>Løp</h2></a>
+            <table class="table table-striped">
+                <thead>
+                    <th>
+                        <td>Navn</td>
+                        <td>Dato</td>
+                        <!--<td>Arrangør</td>
+                        <td>Nivå</td>
+                        <td>Klasse</td>
+                        <td>Distanse</td>
+                        <td>Type</td>
+                        <td>Sted</td>
+                        <td>Kommune</td>-->
+                    </th>
+                </thead>
+                <tbody>
+                    {% for rad in tabel_L %}
+                        <tr>
+                            <td><a href="{{ url_for('viser_id', typ='løp', id=rad['id']) }}">{{ rad['id'] }}</a></td>
+                            <td>{{ rad['navn'] }}</td>
+                            <td>{{ rad['dato'] }}</td>
+                            <!--<td>{{ rad['arrangør'] }}</td>
+                            <td>{{ rad['nivå'] }}</td>
+                            <td>{{ rad['klasse'] }}</td>
+                            <td>{{ rad['distanse'] }}</td>
+                            <td>{{ rad['type'] }}</td>
+                            <td>{{ rad['sted'] }}</td>
+                            <td>{{ rad['kommune'] }}</td>-->
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <a href=><h2>Treninger</h2></a>
+            <table class="table table-striped">
+                <thead>
+                    <th>
+                        <td>Navn</td>
+                        <td>Dato</td>
+                        <!--<td>Med</td>
+                        <td>Økt nr.</td>
+                        <td>Kart nr.</td>
+                        <td>Klasse</td>
+                        <td>Type</td>
+                        <td>Sted</td>
+                        <td>Kommune</td>-->
+                    </th>
+                </thead>
+                <tbody>
+                    {% for rad in tabel_T %}
+                        <tr>
+                            <td>{{ rad['id'] }}</td>
+                            <td>{{ rad['navn'] }}</td>
+                            <td>{{ rad['dato'] }}</td>
+                            <!--<td>{{ rad['med'] }}</td>
+                            <td>{{ rad['øktnr'] }}</td>
+                            <td>{{ rad['kartnr'] }}</td>
+                            <td>{{ rad['klasse'] }}</td>
+                            <td>{{ rad['type'] }}</td>
+                            <td>{{ rad['sted'] }}</td>
+                            <td>{{ rad['kommune'] }}</td>-->
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<input type="button" onclick="location.href='{{ url_for('viser_id', typ=typ, id=data['id']-1) }}';" value="Forgje" />
+<input type="button" onclick="location.href='{{ url_for('viser_id', typ=typ, id=data['id']+1) }}';" value="Neste" />
+
+<input type="text" placeholder="ID" id="søk">
+<input type="button" onclick="location.href='/vis/{{typ}}/'+document.getElementById('søk').value" value="Gå til">
+
+
+<h1>{% block title %} {{data["navn"]}} {% endblock %}</h1>
+
+<script>
+    function rediger(e) {
+        {% for i in data_u %}
+            document.getElementById("{{i}}").disabled = false;
+        {% endfor %}
+        marker.dragging.enable()
+        document.getElementById("slett").disabled = false;
+        document.getElementById("lagre").disabled = false;
+        document.getElementById("rediger").disabled = true;
+    };
+
+    function slett(e) {
+        $.ajax({
+            type: 'GET',
+            url: '/delete/{{typ}}?id={{data["id"]}}',
+            success : function(result) {
+            jQuery("#clash").html(result); 
+            },error : function(result){
+            console.log(result);
+            }
+        });
+        window.location.href = "{{ url_for('hjem') }}";
+    };
+
+    function lagre(e) {
+        let d = marker.getLatLng();
+        {% for i in data_u %}
+            d["{{i}}"] = document.getElementById("{{i}}").value;
+        {% endfor %}
+        d["id"] = parseInt(document.getElementById("id").value)
+        console.log(d)
+        {% for i in data_u %}
+            document.getElementById("{{i}}").disabled = true;
+        {% endfor %}
+        marker.dragging.disable()
+        document.getElementById("slett").disabled = true;
+        document.getElementById("lagre").disabled = true;
+        document.getElementById("rediger").disabled = false;
+        $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            url: '/update/{{typ}}?id={{data["id"]}}',
+            dataType : 'json',
+            data : JSON.stringify(d),
+            success : function(result) {
+            jQuery("#clash").html(result); 
+            },error : function(result){
+            console.log(result);
+            }
+        });        
+    };
+
+
+</script>
+
+<form>
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td><label for="id"><b>ID</b></label></td>
+                        <td><input type="text" id="id" value="{{data['id']}}" disabled></td>
+                    </tr>
+                    {% for i in data_u %}
+                        <tr>
+                            <td><label for="{{i}}"><b>{{stor_bokst(i)}}</b></label></td>
+                            <td><input type="text" id="{{i}}" value="{{data[i]}}" disabled></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+    </table>
+</form>
+<hr>
+<input id="rediger" type="button" onclick="rediger()" value="Rediger">
+<input id="slett" type="button" onclick="slett()" value="Slett" disabled>
+<input id="lagre" type="button" onclick="lagre()" value="Lagre" disabled>
+<hr>
+<div id="map" style="height: 500px;"></div>
+
+
+<!--<script src="https://code.jquery.com/jquery-3.5.0.js"></script>-->
+<script>
+
+
+    function send(e) {
+        let data = e.target.getLatLng();
+        $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            url: '/js',
+            dataType : 'json',
+            data : JSON.stringify(data),
+            success : function(result) {
+            jQuery("#clash").html(result); 
+            },error : function(result){
+            console.log(result);
+            }
+        });
+    };
+
+    //console.log($.get("/"))
+
+    const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+    const map = L.map('map').setView([{{ lat }}, {{ lng }}], 10);
+    const marker = L.marker([{{ lat }}, {{ lng }}], {"draggable":false}).addTo(map);
+    //marker.on("dragend", send);
+    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
+    //const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution});
+    tiles.addTo(map);
+
+</script>
+
+
+
+
+{% endblock %}
