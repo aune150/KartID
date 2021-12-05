@@ -69,7 +69,6 @@ def viser_id(typ, id:int):
         l = [{i:data[i]} for i in data if data[i]["id"] == id][0]
         l = l[[i for i in l][0]]
         data_u = [i for i in l if i != "id" and i != "lat" and i != "lng"]
-        print(data_u)
         if not "lat" in l.keys():
             l["lat"] = 60
         if not "lng" in l.keys():
