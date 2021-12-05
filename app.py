@@ -1,4 +1,3 @@
-# Required Imports
 import os
 from flask import Flask, request, jsonify, render_template, url_for
 from firebase_admin import credentials, firestore, initialize_app, db
@@ -130,7 +129,6 @@ def update(typ):
         typ: trening | løp
         id: 1
     """
-    #try:
     data = base.get()[typ]
     id = int(request.args.to_dict()["id"])
 
@@ -144,9 +142,7 @@ def update(typ):
     else:
         return f"id {id} finnes ikke i {typ}", 400
 
-        
-    #except Exception as e:
-    #    return f"An Error Occured: {e}"
+
 
 
 @app.route('/delete/<typ>', methods=['GET', 'DELETE'])
@@ -172,14 +168,7 @@ def delete(typ):
     else:
         return f"id {id} finnes ikke i {typ}", 400
 
-    """
-    try:
-        id = request.args.to_dict()["id"]
-        base.child(typ).child(id).delete()
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        return f"An Error Occured: {e}"
-    """
+
 
 @app.route("/js", methods = ["POST"])
 def js():
