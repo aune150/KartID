@@ -181,7 +181,12 @@ def js():
 
 port = int(os.environ.get('PORT', 8080))
 
+if sys.argv[1]:
+    host = sys.argv[1]
+else:
+    host = "127.0.0.1"
+
 #, host='0.0.0.0'
 if __name__ == '__main__':
-    app.run(threaded=True, port=port, debug=True, host=sys.argv[1])
+    app.run(threaded=True, port=port, debug=True, host=host)
 
