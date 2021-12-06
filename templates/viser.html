@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 <!-- Viser alle kartene fra en kategori-->
 {% block content %}
-    <h1>{% block title %} Viser {% endblock %}</h1>
-    <h2>Treninger</h2>
+    <h1>{% block title %} {{ storb(typ) }} {% endblock %}</h1>
     <table class="table table-striped">
         <thead>
             <th>
@@ -14,12 +13,12 @@
             </th>
         </thead>
         <tbody>
-            {% for rad in tabel_T %}
+            {% for rad in tabel %}
                 <tr>
-                    <td>{{ rad['id'] }}</td>
+                    <td><a href="{{ url_for('viser_id', typ=typ, id=rad['id']) }}">{{ rad['id'] }}</a></td>
                     <td>{{ rad['navn'] }}</td>
                     <td>{{ rad['dato'] }}</td>
-                    <td>{{ rad['Med'] }}</td>
+                    <td>{{ rad['med'] }}</td>
                     <td>{{ rad['kommune'] }}</td>
                     <td>{{ rad['sted'] }}</td>
                 </tr>

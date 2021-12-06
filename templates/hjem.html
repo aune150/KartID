@@ -18,7 +18,7 @@
     
     <div class="row">
         <div class="column">
-            <a href=><h2>Løp</h2></a>
+            <a href="{{ url_for('viser', typ='løp') }}"><h2>Løp</h2></a>
             <table class="table table-striped">
                 <thead>
                     <th>
@@ -52,7 +52,7 @@
             </table>
         </div>
         <div>
-            <a href=><h2>Treninger</h2></a>
+            <a href="{{ url_for('viser', typ='trening') }}"><h2>Treninger</h2></a>
             <table class="table table-striped">
                 <thead>
                     <th>
@@ -70,7 +70,7 @@
                 <tbody>
                     {% for rad in tabel_T %}
                         <tr>
-                            <td>{{ rad['id'] }}</td>
+                            <td><a href="{{ url_for('viser_id', typ="trening", id=rad['id']) }}">{{ rad['id'] }}</a></td>
                             <td>{{ rad['navn'] }}</td>
                             <td>{{ rad['dato'] }}</td>
                             <!--<td>{{ rad['med'] }}</td>

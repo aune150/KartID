@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify, render_template, url_for
 from firebase_admin import credentials, firestore, initialize_app, db
 import json
+import sys
 
 
 def id_i_liste(liste, key, value) -> bool:
@@ -50,7 +51,7 @@ def viser(typ):
     """
     text, code = read(typ)
     tabel = [json.loads(text.get_data(True))[i] for i in json.loads(text.get_data(True))]
-    return render_template("viser.html", kategori=typ, tabel=tabel)
+    return render_template("viser.html", typ=typ, tabel=tabel, storb = stor_bokst)
 
 
 @app.route("/vis/<typ>/<int:id>")
@@ -180,7 +181,7 @@ def js():
 
 port = int(os.environ.get('PORT', 8080))
 
-
+#, host='0.0.0.0'
 if __name__ == '__main__':
-    app.run(threaded=True, host='0.0.0.0', port=port, debug=True)
+    app.run(threaded=True, port=port, debug=True, host=sys.argv[1])
 

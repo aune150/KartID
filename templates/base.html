@@ -22,6 +22,8 @@
   <body>
     <nav class="navbar navbar-expand-md navbar-light bg-light">
         <a class="navbar-brand" href="{{ url_for('hjem')}}">Hjem</a>
+        <a href="{{ url_for('viser', typ='løp') }}">Løp</a>
+        <a href="{{ url_for('viser', typ='trening') }}">Treninger</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
