@@ -1,7 +1,7 @@
 .gitignore
 /start.py
 /key.txt
-/kart.db
+#/kart.db
 /key.json
 /Include
 /Scripts
