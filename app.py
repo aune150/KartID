@@ -13,7 +13,7 @@ from wtforms.validators import DataRequired
 
 # Initialize Flask App
 app = Flask(__name__)
-app.config["SECRET_KEY"] = open("key.txt", "r").read()
+app.config["SECRET_KEY"] = "Dette er en veldig hemmelig nøkkel"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///kart.db"
 db = SQLAlchemy(app)
 
