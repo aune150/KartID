@@ -58,7 +58,7 @@
 
     const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
     const map = L.map('map').setView([{{ kart.lat }}, {{ kart.lng }}], 10);
-    const marker = L.marker([{{ kart.lat }}, {{ kart.lng }}, {icon: O}], {"draggable":false}).addTo(map);
+    const marker = L.marker([{{ kart.lat }}, {{ kart.lng }}, {icon: O}], {"draggable":false, icon:O}).addTo(map);
     const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
     tiles.addTo(map);
 </script>
