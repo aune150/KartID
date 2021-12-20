@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div id="map" style="height: 500px;"></div>
+
+<script>
+    var O = L.icon({
+        iconUrl: "/static/O.png",
+        iconSize: [25, 25],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15],
+    });
+
+    const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+    const map = L.map('map').setView([63.45, 10.39], 5);
+
+    {% for k in kart %}
+        {% if k.lat != 63.45 %}
+            L.marker([{{ k.lat }}, {{ k.lng }}], {icon: O, title: "{{ k.navn }}"}).bindPopup("<a href='/vis/{{ k.nr }}'>VIS</a>").setLatLng([{{ k.lat }}, {{ k.lng }}]).openPopup().addTo(map);
+        {% endif %}
+    {% endfor %}
+    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution});
+    tiles.addTo(map);
+</script>
+
+
+{% endblock %}

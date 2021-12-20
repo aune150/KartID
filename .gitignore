@@ -1,4 +1,9 @@
+.gitignore
+/start.py
+/key.txt
+/kart.db
 /key.json
+/Include
 /Scripts
 /Lib
 /Gammel kartid

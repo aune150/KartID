@@ -1,187 +1,170 @@
-import os
-from flask import Flask, request, jsonify, render_template, url_for
-from firebase_admin import credentials, firestore, initialize_app, db
 import json
+import os
 import sys
+from datetime import datetime
 
-
-def id_i_liste(liste, key, value) -> bool:
-    for i in liste:
-        i = liste[i]
-
-        #print(i[key], value)
-        #print(type(i[key]), type(value))
-        if str(i[key]) == str(value):
-            return True
-    return False
-
-def stor_bokst(s:str):
-    return s[0].upper() + s[1:]
+from flask import Flask, jsonify, render_template, request, url_for
+from flask_sqlalchemy import SQLAlchemy, model
+from flask_wtf import FlaskForm
+from sqlalchemy import desc
+from wtforms import DateField, SelectField, StringField, SubmitField
+from wtforms.fields.numeric import FloatField, IntegerField
+from wtforms.validators import DataRequired
 
 # Initialize Flask App
 app = Flask(__name__)
-# Initialize Firestore DB
-cred = credentials.Certificate('key.json')
-default_app = initialize_app(cred, {
-    "databaseURL":"https://kart-id-default-rtdb.europe-west1.firebasedatabase.app/"
-})
-dab = firestore.client()
-todo_ref = dab.collection('todos')
-base = db.reference("/")
+app.config["SECRET_KEY"] = open("key.txt", "r").read()
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///kart.db"
+db = SQLAlchemy(app)
+
+# Create model
+class base(db.Model):
+    nr = db.Column(db.Integer, primary_key=True)
+    dato_lagd = db.Column(db.DateTime, default=datetime.utcnow)
+    navn = db.Column(db.String(200))
+    dato = db.Column(db.Date)
+    arr = db.Column(db.String(100))
+    typ = db.Column(db.String(10))
+    klasse = db.Column(db.String(10))
+    kommune = db.Column(db.String(50))
+    sted = db.Column(db.String(100))
+    hva = db.Column(db.String(20))
+    lat = db.Column(db.Float)
+    lng = db.Column(db.Float)
+
+    def __repr__(self) -> str:
+        return "<navn %r>" % self.navn
+    
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class skjema(FlaskForm):
+    nr = IntegerField("ID", validators=[DataRequired()])
+    navn = StringField("Navn", validators=[DataRequired()])
+    dato = DateField("Dato", validators=[DataRequired()])
+    arr = StringField("Arrangør")
+    klasse = StringField("Klasse")
+    kommune = StringField("Kommune")
+    sted = StringField("Sted")
+    hva = StringField("Hva")
+    typ = SelectField('Type', choices=[("Løp", "Løp"), ("Trening", "Trening")], validators=[DataRequired()])
+    lat = FloatField("Lat")
+    lng = FloatField("Lng")
+    lagre = SubmitField("Lagre")
+    slett = SubmitField("Slett")
+
+
+@app.errorhandler(404)
+def error_404(error):
+    return f"404, {error}", 404
+
 
 @app.route("/")
 def hjem():
-    """
-    Lager en hjemskjerm med de 10 siste kartene for hver kategori
-    """
-    text, code = read("trening")
-    tabel_T = [json.loads(text.get_data(True))[i] for i in json.loads(text.get_data(True))]
-    text, code = read("løp")
-    tabel_L = [json.loads(text.get_data(True))[i] for i in json.loads(text.get_data(True))]
-    return render_template("hjem.html", tabel_L=tabel_L[-10:], tabel_T=tabel_T[-10:])
+    return render_template("hjem.html")
 
 
-@app.route("/vis/<typ>")
-def viser(typ):
-    """
-        Side hvor man kan se på alle kartene for trening eller løp
-        typ: trening | løp
-
-        Mangler html
-    """
-    text, code = read(typ)
-    tabel = [json.loads(text.get_data(True))[i] for i in json.loads(text.get_data(True))]
-    return render_template("viser.html", typ=typ, tabel=tabel, storb = stor_bokst)
-
-
-@app.route("/vis/<typ>/<int:id>")
-def viser_id(typ, id:int):
-    """
-        Side der man viser et kart, etterhvert med mulighet for redigering
-        typ: trening | løp
-        id: 1
-
-    """
-    data = base.get()[typ]
-    id = int(id)
-
-    if id_i_liste(data, "id", id):        # Sjekker om data har minst en value med key
-        l = [{i:data[i]} for i in data if data[i]["id"] == id][0]
-        l = l[[i for i in l][0]]
-        data_u = [i for i in l if i != "id" and i != "lat" and i != "lng"]
-        if not "lat" in l.keys():
-            l["lat"] = 60
-        if not "lng" in l.keys():
-            l["lng"] = 10
-        return render_template("viser_id_m.html", data=l, data_u=data_u, stor_bokst=stor_bokst, lat=l["lat"], lng=l["lng"], typ=typ)
-    
-    else:
-        return jsonify({"success": False}), 400
+@app.route("/ny", methods=["GET", "POST"])
+def ny():
+    navn = None
+    form = skjema()
+    if form.is_submitted():
+        kart = base(typ=form.typ.data, navn=form.navn.data, dato=form.dato.data, arr=form.arr.data, klasse=form.klasse.data, kommune=form.kommune.data, sted=form.sted.data, hva=form.hva.data, lat=form.lat.data, lng=form.lng.data)
+        db.session.add(kart)
+        db.session.commit()
+        return viser(kart.nr)
+    return render_template("ny.html", navn=navn, form=form)
 
 
-@app.route('/add/<typ>', methods=['POST'])
-def create(typ):
-    """
-        Lager et nytt kart i kategori <typ>. Data skal sendes med json
-        typ: trening | løp
-        data:   {'id': 1, 'dato': '2016-04-17', 'navn': 'O-teknisk trening', 'med': 'STOK', 'øktnr': 0.0, 'kartnr': 0.0, 'klasse': 'B', 'type': 'Sk', 'sted': 'Lyngset', 'kommune': 'Ørland'} | 
-                {'id': 1, 'dato': '2014-05-21', 'navn': 'Ungdomsløp', 'arrangør': 'Freidig', 'nivå': 'C', 'klasse': 'H11-12', 'distanse': 'M', 'type': 'U', 'sted': 'Ferista', 'kommune': 'TRD'}
-    """
-    try:
-        base.child(typ).push(request.json)
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        print(f"Error: {e}")
-        return f"An Error Occured: {e}"
-
-
-@app.route('/les/<typ>', methods=['GET'])
-def read(typ):
-    """
-        Lager en liste med kart i kategori <typ> som oppfyller kravene
-        typ: trening | løp
-        spørring: id=1 | arrangør=Freidig
-    """
-    try:
-        args = request.args.to_dict()
-        data = base.get()[typ]
+@app.route("/søk", methods=["GET", "POST"])
+def søk(navn=None):
+    print(request.method)
+    if request.method == "POST":
+        #kart = base.query.filter_by(navn=request.form["søk"])
+        kart = base.query.filter(base.navn.like('%' + request.form["søk"] + '%'))
+        print(kart.order_by(base.navn).all())
+        return render_template("vis.html", kart=kart)
         
-        if len(args) > 0:
-            key = [i for i in args][0]
-            value = int(args[key])
-            if id_i_liste(data, key, int(value)):        # Sjekker om data har minst en value med key
-                    l = [{i:data[i]} for i in data if data[i][key] == value]
-                    return jsonify(l), 200
-            else:
-                return jsonify({"error":f"Nøkkelen {key} har ikke verdi {value} i databasen"}), 400
-        
-        else:
-            return jsonify(base.get()[typ]), 200
 
-            
-    except Exception as e:
-        return f"An Error Occured: {e}", 404
+@app.route("/vis")
+def vis():
+    kart = base.query.order_by(desc(base.dato))
+    """ut = []
+    for k in kart:
+        k = base.as_dict(k)
+        k["dato"] = k["dato"].isoformat()
+        k["dato_lagd"] = k["dato_lagd"].isoformat()
+        ut.append(k)
+    json.dump(ut, open("test.json", "w", encoding="UTF-8"))"""
+    return render_template("vis.html", typ="treninger", kart=kart)
 
 
-@app.route('/update/<typ>', methods=['POST', 'PUT'])
-def update(typ):
-    """
-        Oppdaterer kart med id i <typ>
-        typ: trening | løp
-        id: 1
-    """
-    data = base.get()[typ]
-    id = int(request.args.to_dict()["id"])
-
-
-    if id_i_liste(data, "id", id):        # Sjekker om data har minst en value med key
-        l = [{i:data[i]} for i in data if data[i]["id"] == id]
-        id_fire = [i for i in l[0]][0]
-        base.child(typ).child(id_fire).update(request.json)
-        return jsonify({"success": True}), 200
-
+@app.route("/vis/<int:id>")
+def viser(id):
+    kart = base.query.get(id)
+    if kart is not None:
+        return render_template("viser.html", kart=kart)
     else:
-        return f"id {id} finnes ikke i {typ}", 400
+        error_404(f"Fant ikke {id} i databasen, legg den til!")
 
 
-
-
-@app.route('/delete/<typ>', methods=['GET', 'DELETE'])
-def delete(typ):
-    """
-        Sletter kart med id i <typ>
-        typ: trening | løp
-        id: 1
-
-        Funker ikke enda. Foreløbig må man ha Mq0ylM4c1oACmC_nHyA id fra firebase
-    """
-    data = base.get()[typ]
-    id = int(request.args.to_dict()["id"])
-
-
-    if id_i_liste(data, "id", id):        # Sjekker om data har minst en value med key
-        l = [{i:data[i]} for i in data if data[i]["id"] == id]
-        id_fire = [i for i in l[0]][0]
-        print("DELETE", typ, id_fire)
-        #base.child(typ).child(id_fire).delete()
-        return jsonify({"success": True}), 200
-
+@app.route("/rediger/<int:id>", methods=["GET", "POST"])
+def rediger(id):
+    kart = base.query.get(id)
+    if request.method == "POST":
+        if "slett" in request.form:
+            base.query.filter_by(nr=id).delete()
+            db.session.commit()
+            return hjem()
+        #kart.nr = request.form["nr"]
+        kart.navn = request.form["navn"]
+        kart.dato = datetime.fromisoformat(request.form["dato"])
+        kart.arr = request.form["arr"]
+        kart.klasse = request.form["klasse"]
+        kart.kommune = request.form["kommune"]
+        kart.sted = request.form["sted"]
+        kart.hva = request.form["hva"]
+        kart.lat = request.form["lat"]
+        kart.lng = request.form["lng"]
+        kart.typ = request.form["typ"]
+        db.session.commit()
+        return viser(id)
+    if kart is not None:
+        form = skjema()
+        form.nr.data = kart.nr
+        form.navn.data = kart.navn
+        form.dato.data = kart.dato
+        form.arr.data = kart.arr
+        form.klasse.data = kart.klasse
+        form.kommune.data = kart.kommune
+        form.sted.data = kart.sted
+        form.hva.data = kart.hva
+        form.lat.data = kart.lat
+        form.lng.data = kart.lng
+        form.typ.data = kart.typ
+        if form.lat.data is None:
+            form.lat.data = 63.43
+        if form.lng.data is None:
+            form.lng.data = 10.39
+        return render_template("rediger.html", form=form)
     else:
-        return f"id {id} finnes ikke i {typ}", 400
+        print(3)
+        return error_404(f"Fant ikke {id} i databasen, legg det til")
 
 
-
-@app.route("/js", methods = ["POST"])
-def js():
-    jsdata = request.get_json()
-    print(jsdata)
-    return "Hello world"
-
+@app.route("/kart")
+def kartIkart():
+    kart = base.query.order_by(desc(base.dato))
+    return render_template("kartikart.html", kart=kart)
 
 
 port = int(os.environ.get('PORT', 8080))
 
-#, host='0.0.0.0'
+if len(sys.argv) > 1:
+    host = sys.argv[1]
+else:
+    host = "127.0.0.1"
 if __name__ == '__main__':
-    app.run(threaded=True, port=port, debug=True, host=sys.argv[1])
+    app.run(threaded=True, port=port, debug=True, host=host)
 

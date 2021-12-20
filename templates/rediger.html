@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<script>
+    function a (e) {
+        document.getElementById("lat").value = marker.getLatLng()["lat"]
+        document.getElementById("lng").value = marker.getLatLng()["lng"]
+    };
+</script>
+
+<form method="post">
+    {{ form.hidden_tag()}}
+    {{ form.nr.label }}
+    {{ form.nr(disabled = "true") }}
+    <br>
+    {{ form.navn.label }}
+    {{ form.navn() }}
+    <br>
+    {{ form.dato.label }}
+    {{ form.dato() }}
+    <br>
+    {{ form.typ.label }}
+    {{ form.typ() }}
+    <br>
+    {{ form.arr.label }}
+    {{ form.arr() }}
+    <br>
+    {{ form.klasse.label }}
+    {{ form.klasse() }}
+    <br>
+    {{ form.kommune.label }}
+    {{ form.kommune() }}
+    <br>
+    {{ form.sted.label }}
+    {{ form.sted() }}
+    <br>
+    {{ form.hva.label }}
+    {{ form.hva() }}
+    <br>
+    {{ form.lat(hidden="true") }}
+    {{ form.lng(hidden="true") }}
+    
+    {{ form.lagre(onclick="a()", class="btn btn-secondary") }}
+    <a href="{{ url_for('viser', id=form.nr.data) }}" class="btn btn-secondary">Abryt</a>
+    {{ form.slett(class="btn btn-secondary", style="background-color: #8B0000") }}
+</form>
+
+<div id="map" style="height: 500px;"></div>
+
+<script>
+    var O = L.icon({
+        iconUrl: "/static/O.png",
+        iconSize: [25, 25],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15],
+    });
+
+    const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+    const map = L.map('map').setView([{{ form.lat.data }}, {{ form.lng.data }}], 10);
+    const marker = L.marker([{{ form.lat.data }}, {{ form.lng.data }}], {icon: O}).addTo(map);
+    marker.dragging.enable()
+    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
+    tiles.addTo(map);
+</script>
+
+
+{% endblock %}

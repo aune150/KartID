@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <td scope="col">Navn</td>
+            <td scope="col">Dato</td>
+            <td scope="col">Arrangør</td>
+            <td scope="col">Sted</td>
+            <td scope="col">Kommune</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for k in kart %}
+            <tr>
+                <td><a href="{{ url_for('viser', id=k.nr) }}"> {{ k.navn }} </a></td>
+                <td>{{ k.dato }}</td>
+                <td>{{ k.arr }}</td>
+                <td>{{ k.sted }}</td>
+                <td>{{ k.kommune }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+{% endblock %}

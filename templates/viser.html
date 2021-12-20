@@ -1,28 +1,67 @@
 {% extends 'base.html' %}
-<!-- Viser alle kartene fra en kategori-->
+
 {% block content %}
-    <h1>{% block title %} {{ storb(typ) }} {% endblock %}</h1>
-    <table class="table table-striped">
-        <thead>
-            <th>
-                <td>Navn</td>
-                <td>Dato</td>
-                <td>Med</td>
-                <td>Kommune</td>
-                <td>Sted</td>
-            </th>
-        </thead>
-        <tbody>
-            {% for rad in tabel %}
-                <tr>
-                    <td><a href="{{ url_for('viser_id', typ=typ, id=rad['id']) }}">{{ rad['id'] }}</a></td>
-                    <td>{{ rad['navn'] }}</td>
-                    <td>{{ rad['dato'] }}</td>
-                    <td>{{ rad['med'] }}</td>
-                    <td>{{ rad['kommune'] }}</td>
-                    <td>{{ rad['sted'] }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<h1 class="title">{% block title %}{{ kart.navn }}{% endblock %}</h1>
+<br><br>
+
+<table class="table table-striped">
+    <tr>
+        <td>ID</td>
+        <td>{{ kart.nr }}</td>
+    </tr>
+    <tr>
+        <td>Dato</td>
+        <td>{{ kart.dato }}</td>
+    </tr>
+    <tr>
+        <td>Type</td>
+        <td>{{ kart.typ }}</td>
+    </tr>
+    <tr>
+        <td>Sted</td>
+        <td>{{ kart.sted }}</td>
+    </tr>
+    <tr>
+        <td>Kommune</td>
+        <td>{{ kart.kommune }}</td>
+    </tr>
+    <tr>
+        <td>Arrangør</td>
+        <td>{{ kart.arr }}</td>
+    </tr>
+    <tr>
+        <td>Klasse</td>
+        <td>{{ kart.klasse }}</td>
+    </tr>
+    <tr>
+        <td>Hva</td>
+        <td>{{ kart.hva }}</td>
+    </tr>
+</table>
+<br>
+
+<input type="button" onclick="location.href='/rediger/{{ kart.nr }}';" value="Rediger" class="btn btn-secondary"/>
+
+<br>
+
+
+
+<div id="map" style="height: 500px;"></div>
+
+<script>
+    var O = L.icon({
+        iconUrl: "/static/O.png",
+        iconSize: [25, 25],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15],
+    });
+
+    const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+    const map = L.map('map').setView([{{ kart.lat }}, {{ kart.lng }}], 10);
+    const marker = L.marker([{{ kart.lat }}, {{ kart.lng }}, {icon: O}], {"draggable":false}).addTo(map);
+    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
+    tiles.addTo(map);
+</script>
+
+
 {% endblock %}
