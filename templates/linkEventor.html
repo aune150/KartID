@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        .row {
+            margin-left:-5px;
+            margin-right:-5px;
+        }
+            
+        .column {
+            float: left;
+            width: 50%;
+            padding: 5px;
+        }
+    </style>
+
+    <h1>{% block title %} Koble Eventor {% endblock %}</h1>
+
+    <label for="startDato">Fra</label>
+    <input type="date" name="Fra" id="startDato" value="{{startDato}}" onchange="datoendring()">
+    <label for="sluttDato">Til</label>
+    <input type="date" name="Til" id="sluttDato" value="{{sluttDato}}" onchange="datoendring()">
+    <br>
+    <input type="checkbox" name="Kun uten" id="kunUten" onchange="datoendring()" {{ "checked" if kunUten == "true" }}>
+    <label for="kunUten">Vis kun de uten EventorID</label>
+    <br>
+    <input type="checkbox" name="Mine løp" id="mineLop" onchange="datoendring()" {{ "checked" if mineLop == "true" }}>
+    <label for="mineLop">Vis kun mine Løp</label>
+    <br>
+    <table class="table">
+        <tr>
+            <th>Dato</th>
+            <th>Navn</th>
+            <th>EventorNavn</th>
+            <th>EventorID</th>
+        </tr>
+        {% for lop in events %}
+        <tr>
+            <td><input type="date" value="{{ lop.dato }}" disabled></td>
+            <td><a href="{{ url_for('viser', id=lop.nr) }}"> {{ lop.navn }} </a></td>
+            <td><select name="Hei" id="valgNR{{lop.nr}}" class="custom-select" onchange="oppdater({{lop.nr}})">
+                <option value="tom"></option>
+                {% for v in valg.get(lop.dato, []) %}
+                <option value="{{ v.eventorID }}" {{ "selected" if v.eventorID == lop.eventorID}}>{{ v.navn }}</option>
+                {% endfor %}
+            </select></td>
+            <td><input type="text" name="" id="eventorIDNR{{lop.nr}}" value="{{ lop.eventorID }}" onchange="oppdater({{lop.nr}})"></td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        function datoendring () {
+            var startDato = document.getElementById("startDato").value;
+            var sluttDato = document.getElementById("sluttDato").value;
+            var kunUten = document.getElementById("kunUten").checked;
+            var mineLop = document.getElementById("mineLop").checked;
+            window.location.href = window.location.href.split("?")[0] + "?startDato=" + startDato + "&sluttDato=" + sluttDato + "&kunUten=" + kunUten + "&mineLop=" + mineLop;
+        };
+
+        function oppdater (nr) {
+            var eventorID = document.getElementById("valgNR" + nr).value
+            if (eventorID == "tom") {
+                var input = document.getElementById("eventorIDNR" + nr);
+                if (input.value != "") {
+                    eventorID = input.value;
+                }
+            }
+            fetch("/api/oppdaterEventorID", {
+                method: "POST",
+                body: JSON.stringify({
+                    NR: nr,
+                    nyEventorID: eventorID,
+                    startDato: "{{startDato}}",
+                    sluttDato: "{{sluttDato}}"
+                })
+            }).then(res=>res.json()).then((data)=>{
+                data.forEach((lop) => {
+                    document.getElementById("eventorIDNR" + lop["nr"]).value = lop["eventorID"]
+                })
+            })
+        }
+    </script>
+    
+
+
+{% endblock %}

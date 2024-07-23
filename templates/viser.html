@@ -6,12 +6,12 @@
 
 <table class="table table-striped">
     <tr>
-        <td>ID</td>
-        <td>{{ kart.nr }}</td>
+        <th>Hva</th>
+        <th>Verdi</th>
     </tr>
     <tr>
         <td>Dato</td>
-        <td>{{ kart.dato }}</td>
+        <td>{{ kart.dato.strftime("%d.%m.%Y") }}</td>
     </tr>
     <tr>
         <td>Type</td>
@@ -40,6 +40,12 @@
 </table>
 <br>
 
+{% if kart.eventorID != "" %}
+<a href="https://eventor.orientering.no/Events/Show/{{kart.eventorID}}"><button class="btn btn-primary">Åpne i Eventor</button></a>
+<br>
+<br>
+{% endif %}
+
 <input type="button" onclick="location.href='/rediger/{{ kart.nr }}';" value="Rediger" class="btn btn-secondary"/>
 
 <br>
@@ -59,8 +65,19 @@
     const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
     const map = L.map('map').setView([{{ kart.lat }}, {{ kart.lng }}], 10);
     const marker = L.marker([{{ kart.lat }}, {{ kart.lng }}, {icon: O}], {"draggable":false, icon:O}).addTo(map);
-    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
-    tiles.addTo(map);
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    const topo4 = L.tileLayer(
+        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
+            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
+        });
+    osm.addTo(map);
+    L.control.layers({
+        "OpenStreetMap": osm,
+        "Norgeskart": topo4
+    }).addTo(map);
 </script>
 
 

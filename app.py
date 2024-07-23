@@ -1,26 +1,32 @@
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta, date
+from EventorAPI import EventorAPI
 
-from flask import Flask, jsonify, render_template, request, url_for
-from flask_sqlalchemy import SQLAlchemy, model
+from flask import Flask, jsonify, render_template, request, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from sqlalchemy import desc
 from wtforms import DateField, SelectField, StringField, SubmitField
 from wtforms.fields.numeric import FloatField, IntegerField
 from wtforms.validators import DataRequired
+import logging
 
 # Initialize Flask App
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "Dette er en veldig hemmelig nøkkel"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///kart.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///kart2.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
+EventorAPI = EventorAPI()
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='log.log', level=logging.INFO)
 
 # Create model
 class base(db.Model):
     nr = db.Column(db.Integer, primary_key=True)
-    dato_lagd = db.Column(db.DateTime, default=datetime.utcnow)
+    dato_lagd = db.Column(db.DateTime, default=datetime.now())
     navn = db.Column(db.String(200))
     dato = db.Column(db.Date)
     arr = db.Column(db.String(100))
@@ -31,8 +37,9 @@ class base(db.Model):
     hva = db.Column(db.String(20))
     lat = db.Column(db.Float)
     lng = db.Column(db.Float)
+    eventorID = db.Column(db.String(10))
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return "<navn %r>" % self.navn
     
     def as_dict(self):
@@ -47,8 +54,9 @@ class skjema(FlaskForm):
     klasse = StringField("Klasse")
     kommune = StringField("Kommune")
     sted = StringField("Sted")
-    hva = StringField("Hva")
+    hva = SelectField('Hva', choices=[("Skog", "Skog"), ("Sprint", "Sprint"), ("Annet", "Annet"), ("Mellom", "Mellom"), ("Stafett", "Stafett"), ("Sprint", "Sprint"), ("Lang", "Lang"), ("Ultralang", "Ultralang"), ("Postplukk", "Postplukk"), ("Annet", "Annet")], validators=[DataRequired()])
     typ = SelectField('Type', choices=[("Løp", "Løp"), ("Trening", "Trening")], validators=[DataRequired()])
+    eventorID = StringField("EventorID")
     lat = FloatField("Lat")
     lng = FloatField("Lng")
     lagre = SubmitField("Lagre")
@@ -70,7 +78,7 @@ def ny():
     navn = None
     form = skjema()
     if form.is_submitted():
-        kart = base(typ=form.typ.data, navn=form.navn.data, dato=form.dato.data, arr=form.arr.data, klasse=form.klasse.data, kommune=form.kommune.data, sted=form.sted.data, hva=form.hva.data, lat=form.lat.data, lng=form.lng.data)
+        kart = base(typ=form.typ.data, navn=form.navn.data, dato=form.dato.data, arr=form.arr.data, klasse=form.klasse.data, kommune=form.kommune.data, sted=form.sted.data, hva=form.hva.data, lat=form.lat.data, lng=form.lng.data, eventorID=form.eventorID.data)
         db.session.add(kart)
         db.session.commit()
         return viser(kart.nr)
@@ -79,24 +87,16 @@ def ny():
 
 @app.route("/søk", methods=["GET", "POST"])
 def søk(navn=None):
-    print(request.method)
     if request.method == "POST":
-        #kart = base.query.filter_by(navn=request.form["søk"])
         kart = base.query.filter(base.navn.like('%' + request.form["søk"] + '%'))
-        print(kart.order_by(base.navn).all())
         return render_template("vis.html", kart=kart)
         
 
 @app.route("/vis")
 def vis():
-    kart = base.query.order_by(desc(base.dato))
-    """ut = []
-    for k in kart:
-        k = base.as_dict(k)
-        k["dato"] = k["dato"].isoformat()
-        k["dato_lagd"] = k["dato_lagd"].isoformat()
-        ut.append(k)
-    json.dump(ut, open("test.json", "w", encoding="UTF-8"))"""
+    args = request.args.to_dict()
+    typer = args.get("typ", "Løp,Trening").split(",")
+    kart = base.query.filter(base.typ.in_(typer)).order_by(desc(base.dato))
     return render_template("vis.html", typ="treninger", kart=kart)
 
 
@@ -128,6 +128,7 @@ def rediger(id):
         kart.lat = request.form["lat"]
         kart.lng = request.form["lng"]
         kart.typ = request.form["typ"]
+        kart.eventorID = request.form["eventorID"]
         db.session.commit()
         return viser(id)
     if kart is not None:
@@ -143,6 +144,7 @@ def rediger(id):
         form.lat.data = kart.lat
         form.lng.data = kart.lng
         form.typ.data = kart.typ
+        form.eventorID.data = kart.eventorID
         if form.lat.data is None:
             form.lat.data = 63.43
         if form.lng.data is None:
@@ -158,6 +160,39 @@ def kartIkart():
     kart = base.query.order_by(desc(base.dato))
     return render_template("kartikart.html", kart=kart)
 
+@app.route("/kobleEventor")
+def kobleEventor():
+    args = request.args.to_dict()
+    startDato = args.get("startDato", (date.today()-timedelta(days=30)).isoformat())
+    sluttDato = args.get("sluttDato", date.today().isoformat())
+    kunUten = args.get("kunUten", "false")
+    mineLop = args.get("mineLop", "true")
+    if mineLop == "true":
+        E = EventorAPI.mineLop(startDato, sluttDato).events_valg()
+    else:
+        E = EventorAPI.Lop(startDato, sluttDato).events_valg()
+        if type(E) == int:
+            flash(f"Feilmelding fra Eventor, kode {E}", category="error")
+            return render_template("linkEventor.html", events=[], startDato=startDato, sluttDato=sluttDato, valg={}, kunUten=kunUten, mineLop=mineLop)
+    logger.debug(E)
+    events = base.query.filter(base.typ=="Løp").filter(base.dato >= startDato).filter(base.dato <= sluttDato)
+    if kunUten == "true":
+        events = events.filter(base.eventorID == "")
+    return render_template("linkEventor.html", events=events, startDato=startDato, sluttDato=sluttDato, valg=E, kunUten=kunUten, mineLop=mineLop)
+
+@app.route("/api/oppdaterEventorID", methods=["POST"])
+def apiOppdaterEventorID():
+    data = json.loads(request.data)
+    nr = data["NR"]
+    nyEventorID = data["nyEventorID"]
+    startDato = data["startDato"]
+    sluttDato = data["sluttDato"]
+    kart = base.query.get(nr)
+    kart.eventorID = int(nyEventorID)
+    db.session.commit()
+    #events = base.query.filter(base.typ=="Løp").filter(base.dato >= startDato).filter(base.dato <= sluttDato)
+    events = base.query.filter(base.nr == nr)
+    return jsonify([{"nr":e.nr, "eventorID":e.eventorID} for e in events])
 
 port = int(os.environ.get('PORT', 8080))
 

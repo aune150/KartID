@@ -1,3 +1,7 @@
+*.log
+*.xml
+*.ipynb
+
 .gitignore
 /start.py
 /key.txt
@@ -10,3 +14,4 @@
 /annet
 /__pycache__/
 /KartID
+/.vscode

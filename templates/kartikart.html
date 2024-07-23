@@ -1,11 +1,10 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 
 
 <div id="map" style="height: 500px;"></div>
 
 <script>
+    // https://leafletjs.com/examples/layers-control/
     var O = L.icon({
         iconUrl: "/static/O.png",
         iconSize: [25, 25],
@@ -16,13 +15,24 @@
     const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
     const map = L.map('map').setView([63.45, 10.39], 5);
 
-    {% for k in kart %}
+    {% for k in kart %} 
         {% if k.lat != 63.45 %}
-            L.marker([{{ k.lat }}, {{ k.lng }}], {icon: O, title: "{{ k.navn }}"}).bindPopup("<a href='/vis/{{ k.nr }}'>VIS</a>").setLatLng([{{ k.lat }}, {{ k.lng }}]).openPopup().addTo(map);
-        {% endif %}
+            L.marker([{{k.lat}}, {{k.lng}}], {icon: O,title: "{{k.navn}}"}).bindPopup("<a href = '/vis/{{k.nr}}'> VIS </a>").setLatLng([{{k.lat}}, {{k.lng}}]).openPopup().addTo(map); 
+        {% endif %} 
     {% endfor %}
-    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution});
-    tiles.addTo(map);
+    const topo4 = L.tileLayer(
+        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
+            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
+        });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    osm.addTo(map);
+    L.control.layers({
+        "OpenStreetMap": osm,
+        "Norgeskart": topo4
+    }).addTo(map);
 </script>
 
 

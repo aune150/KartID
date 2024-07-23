@@ -13,32 +13,48 @@
 
 <form method="post">
     {{ form.hidden_tag()}}
-    {{ form.nr.label }}
-    {{ form.nr(disabled = true) }}
-    <br>
-    {{ form.navn.label }}
-    {{ form.navn() }}
-    <br>
-    {{ form.dato.label }}
-    {{ form.dato() }}
-    <br>
-    {{ form.typ.label }}
-    {{ form.typ() }}
-    <br>
-    {{ form.arr.label }}
-    {{ form.arr() }}
-    <br>
-    {{ form.klasse.label }}
-    {{ form.klasse() }}
-    <br>
-    {{ form.sted.label }}
-    {{ form.sted() }}
-    <br>
-    {{ form.kommune.label }}
-    {{ form.kommune() }}
-    <br>
-    {{ form.hva.label }}
-    {{ form.hva() }}
+    <table class="table">
+        <tr>
+            <td>{{ form.nr.label }}</td>
+            <td>{{ form.nr(disabled = "true") }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.navn.label }}</td>
+            <td>{{ form.navn() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.dato.label }}</td>
+            <td>{{ form.dato() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.typ.label }}</td>
+            <td>{{ form.typ() }}</td>
+        </tr>
+        <tr id="eventorIDRow">
+            <td>{{ form.eventorID.label }}</td>
+            <td>{{ form.eventorID() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.arr.label }}</td>
+            <td>{{ form.arr() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.klasse.label }}</td>
+            <td>{{ form.klasse() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.kommune.label }}</td>
+            <td>{{ form.kommune() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.sted.label }}</td>
+            <td>{{ form.sted() }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.hva.label }}</td>
+            <td>{{ form.hva() }}</td>
+        </tr>
+    </table>
     <br>
     {{ form.lat(hidden="true") }}
     {{ form.lng(hidden="true") }}
@@ -50,13 +66,27 @@
 <div id="map" style="height: 500px;"></div>
 
 <script>
+    vedOppdateringAvTyp(document.getElementById("typ"));
+    document.getElementById("typ").onchange = vedOppdateringAvTyp;
 
     const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
     const map = L.map('map').setView([63.43, 10.39], 10);
     const marker = L.marker([63.43, 10.39]).addTo(map);
-    marker.dragging.enable()
-    const tiles = L.tileLayer('https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {attribution})
-    tiles.addTo(map);
+    marker.dragging.enable();
+    marker.on("dragend", a);
+    const topo4 = L.tileLayer(
+        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
+            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
+        });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    osm.addTo(map);
+    L.control.layers({
+        "OpenStreetMap": osm,
+        "Norgeskart": topo4
+    }).addTo(map);
 </script>
 
 
