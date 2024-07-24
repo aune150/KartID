@@ -70,7 +70,8 @@ def error_404(error):
 
 @app.route("/")
 def hjem():
-    return render_template("hjem.html")
+    kart = base.query.order_by(desc(base.dato)).limit(10).all()
+    return render_template("hjem.html", kart=kart)
 
 
 @app.route("/ny", methods=["GET", "POST"])
@@ -97,7 +98,7 @@ def vis():
     args = request.args.to_dict()
     typer = args.get("typ", "Løp,Trening").split(",")
     kart = base.query.filter(base.typ.in_(typer)).order_by(desc(base.dato))
-    return render_template("vis.html", typ="treninger", kart=kart)
+    return render_template("vis.html", typ=typer, kart=kart)
 
 
 @app.route("/vis/<int:id>")

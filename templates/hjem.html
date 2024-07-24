@@ -15,7 +15,30 @@
     </style>
 
     <h1>{% block title %} Hjem {% endblock %}</h1>
-    
+    <br>
+    <h3>Ti siste kart</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Navn</th>
+                <th scope="col">Dato</th>
+                <th scope="col">Arrangør</th>
+                <th scope="col">Sted</th>
+                <th scope="col">Kommune</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for k in kart %}
+            <tr>
+                <td><a href="{{ url_for('viser', id=k.nr) }}"> {{ k.navn }} </a></td>
+                <td>{{ k.dato.strftime("%d.%m.%Y") }}</td>
+                <td>{{ k.arr }}</td>
+                <td>{{ k.sted }}</td>
+                <td>{{ k.kommune }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 
 {% endblock %}
