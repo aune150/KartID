@@ -67,31 +67,12 @@
     document.getElementById("typ").onchange = vedOppdateringAvTyp;
 
 
-    var O = L.icon({
-        iconUrl: "/static/O.png",
-        iconSize: [25, 25],
-        iconAnchor: [15, 15],
-        popupAnchor: [0, -15],
-    });
-
-    const attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
-    const map = L.map('map').setView([{{ form.lat.data }}, {{ form.lng.data }}], 10);
+    const map = visKart();
+    map.setView([{{ form.lat.data }}, {{ form.lng.data }}], 10);
+    
     const marker = L.marker([{{ form.lat.data }}, {{ form.lng.data }}], {icon: O}).addTo(map);
     marker.dragging.enable();
     marker.on("dragend", a);
-    const topo4 = L.tileLayer(
-        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
-            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
-        });
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-    osm.addTo(map);
-    L.control.layers({
-        "OpenStreetMap": osm,
-        "Norgeskart": topo4
-    }).addTo(map);
 </script>
 
 

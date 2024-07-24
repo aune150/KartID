@@ -4,12 +4,6 @@
 
 <h1>{% block title %} Nytt kart {% endblock %}</h1>
 
-<script>
-    function a (e) {
-        document.getElementById("lat").value = marker.getLatLng()["lat"]
-        document.getElementById("lng").value = marker.getLatLng()["lng"]
-    };
-</script>
 
 <form method="post">
     {{ form.hidden_tag()}}
@@ -70,23 +64,10 @@
     document.getElementById("typ").onchange = vedOppdateringAvTyp;
 
 
-    const map = L.map('map').setView([63.43, 10.39], 10);
+    const map = visKart();
     const marker = L.marker([63.43, 10.39], {icon: O}).addTo(map);
     marker.dragging.enable();
     marker.on("dragend", a);
-    const topo4 = L.tileLayer(
-        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
-            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
-        });
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-    osm.addTo(map);
-    L.control.layers({
-        "OpenStreetMap": osm,
-        "Norgeskart": topo4
-    }).addTo(map);
 </script>
 
 

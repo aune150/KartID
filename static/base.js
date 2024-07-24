@@ -31,3 +31,29 @@ var O = L.icon({
     iconAnchor: [15, 15],
     popupAnchor: [0, -15],
 });
+
+function a (e) {
+    document.getElementById("lat").value = marker.getLatLng()["lat"]
+    document.getElementById("lng").value = marker.getLatLng()["lng"]
+};
+
+function visKart () {
+    const map = L.map('map').setView([63.43, 10.39], 10);
+    
+    
+    const topo4 = L.tileLayer(
+        'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}', {
+            attribution: '&copy; <a href="http://www.kartverket.no">Kartverket</a>'
+        });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    osm.addTo(map);
+    L.control.layers({
+        "OpenStreetMap": osm,
+        "Norgeskart": topo4
+    }).addTo(map);
+
+    return map;
+}
