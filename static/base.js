@@ -25,3 +25,9 @@ function vedOppdateringAvTyp (t) {
     };
 };
 
+var O = L.icon({
+    iconUrl: "/static/O.png",
+    iconSize: [25, 25],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+});
