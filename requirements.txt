@@ -1,7 +1,7 @@
 blinker==1.8.2
 CacheControl==0.12.6
 cachetools==4.2.4
-certifi==2021.10.8
+certifi==2024.7.4
 charset-normalizer==2.0.7
 click==8.1.7
 colorama==0.4.4
@@ -13,14 +13,14 @@ greenlet==1.1.2
 grpcio==1.65.1
 gunicorn==20.1.0
 httplib2==0.20.1
-idna==3.2
+idna==3.7
 itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5
 msgpack==1.0.2
 packaging==21.0
 proto-plus==1.19.5
-protobuf==3.18.1
+protobuf==5.27.2
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==2.4.7
