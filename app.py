@@ -2,16 +2,16 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta, date
+import logging
 from EventorAPI import EventorAPI
 
 from flask import Flask, jsonify, render_template, request, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from sqlalchemy import desc
+from sqlalchemy import desc, select, distinct
 from wtforms import DateField, SelectField, StringField, SubmitField
 from wtforms.fields.numeric import FloatField, IntegerField
 from wtforms.validators import DataRequired
-import logging
 
 # Initialize Flask App
 app = Flask(__name__)
@@ -96,8 +96,25 @@ def søk(navn=None):
 @app.route("/vis")
 def vis():
     args = request.args.to_dict()
+
+    kart = base.query
+    
     typer = args.get("typ", "Løp,Trening").split(",")
-    kart = base.query.filter(base.typ.in_(typer)).order_by(desc(base.dato))
+    kart = kart.filter(base.typ.in_(typer))
+
+    startDato = args.get("startDato", (date.today()-timedelta(days=2000)).isoformat())
+    sluttDato = args.get("sluttDato", date.today().isoformat())
+    kart = kart.filter(startDato <= base.dato).filter(base.dato <= sluttDato)
+
+    arr = args.get("arr", "*").split(",")
+    if arr[0] != "*":
+        kart = kart.filter(base.arr.in_(arr))
+    
+    kart = kart.order_by(desc(base.dato))
+    
+    antall = args.get("antall", "50"); antall = int(antall)
+    kart = kart.limit(antall)
+    
     return render_template("vis.html", typ=typer, kart=kart)
 
 
